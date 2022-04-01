@@ -1,0 +1,18 @@
+{{- $outputName := .Values.outputName }}
+
+{{- range $mtServiceIndex := until (int .Values.mtServiceCount) }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mt-service-{{ $mtServiceIndex }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mt-service-{{ $mtServiceIndex }}
+  namespace: mt-service-{{ $mtServiceIndex }}
+spec:
+  type: ExternalName
+  externalName: {{ $outputName }}
+{{- end }}

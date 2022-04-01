@@ -1,0 +1,82 @@
+{{- $stServiceCount := (int .Values.stServiceCount) }}
+{{- $mtServiceCount := (int .Values.mtServiceCount) }}
+{{- $outputName := .Values.outputName }}
+{{- $ingressClass := .Values.ingressClass }}
+
+{{- range $tenantIndex := until (int .Values.tenantCount) }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-{{ $tenantIndex }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tenant-{{ $tenantIndex }}-ingress
+  namespace: tenant-{{ $tenantIndex }}
+  annotations:
+    konghq.com/strip-path: "true"
+    konghq.com/plugins: request-transformer-{{ $tenantIndex }}
+spec:
+  ingressClassName: {{ $ingressClass }}
+  rules:
+    - host: "tenant-{{ $tenantIndex }}.symphony.com"
+      http:
+        paths:
+{{- range $stServiceIndex := until $stServiceCount }}
+        - path: /st-service-{{ $stServiceIndex }}
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: st-service-{{ $stServiceIndex }}
+              port:
+                number: 80
+{{- end }}
+{{- range $mtServiceIndex := until $mtServiceCount }}
+        - path: /mt-service-{{ $mtServiceIndex }}
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: mt-service-{{ $mtServiceIndex }}-pointer
+              port:
+                number: 80
+{{- end }}
+
+{{- range $stServiceIndex := until $stServiceCount }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: st-service-{{ $stServiceIndex }}
+  namespace: tenant-{{ $tenantIndex }}
+spec:
+  type: ExternalName
+  externalName: {{ $outputName }}
+{{- end }}
+
+{{- range $mtServiceIndex := until $mtServiceCount }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mt-service-{{ $mtServiceIndex }}-pointer
+  namespace: tenant-{{ $tenantIndex }}
+spec:
+  type: ExternalName
+  externalName: mt-service-{{ $mtServiceIndex }}.mt-service-{{ $mtServiceIndex }}
+{{- end }}
+
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: request-transformer-{{ $tenantIndex }}
+  namespace: tenant-{{ $tenantIndex }}
+config:
+  add:
+    headers:
+      - x-tenant-id:{{ $tenantIndex }}
+plugin: request-transformer
+
+{{- end }}

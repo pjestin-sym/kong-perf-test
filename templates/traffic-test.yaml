@@ -1,0 +1,63 @@
+{{- if (and .Values.trafficTest .Values.trafficTest.enabled) }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: traffic-test
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traffic-script
+  namespace: traffic-test
+data:
+  traffic-script.sh: |
+    #!/bin/sh
+    echo "Starting to inject requests..."
+    while true
+    do
+        TENANT=$(expr $RANDOM % $TENANT_COUNT)
+        ST_SERVICE=$(expr $RANDOM % $ST_SERVICE_COUNT)
+        MT_SERVICE=$(expr $RANDOM % $MT_SERVICE_COUNT)
+        curl https://$PROXY_HOST/st-service-$ST_SERVICE/anything -sk -H "Host: tenant-$TENANT.symphony.com"
+        curl https://$PROXY_HOST/mt-service-$MT_SERVICE/anything -sk -H "Host: tenant-$TENANT.symphony.com"
+    done
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traffic-test
+  namespace: traffic-test
+  labels:
+    app: traffic-test
+spec:
+  replicas: {{ .Values.trafficTest.replicas }}
+  selector:
+    matchLabels:
+      app: traffic-test
+  template:
+    metadata:
+      labels:
+        app: traffic-test
+    spec:
+      containers:
+        - image: curlimages/curl
+          name: traffic-test
+          command: ["/scripts/traffic-script.sh"]
+          env:
+            - name: TENANT_COUNT
+              value: "{{ .Values.tenantCount }}"
+            - name: ST_SERVICE_COUNT
+              value: "{{ .Values.stServiceCount }}"
+            - name: MT_SERVICE_COUNT
+              value: "{{ .Values.mtServiceCount }}"
+            - name: PROXY_HOST
+              value: "{{ .Values.ingressClass }}-kong-proxy.{{ .Values.ingressClass }}"
+          volumeMounts:
+            - name: traffic-script
+              mountPath: /scripts
+      volumes:
+        - name: traffic-script
+          configMap:
+            name: traffic-script
+            defaultMode: 0777
+{{- end }}

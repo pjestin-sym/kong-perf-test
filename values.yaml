@@ -1,0 +1,8 @@
+stServiceCount: 5
+mtServiceCount: 2
+tenantCount: 10
+outputName: httpbin.org
+ingressClass: kong
+trafficTest:
+  enabled: false
+  replicas: 1
