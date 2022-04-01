@@ -1,6 +1,6 @@
 {{- $outputName := .Values.outputName }}
 
-{{- range $mtServiceIndex := until (int .Values.mtServiceCount) }}
+{{- range $mtServiceIndex := until (int .Values.count.mtServices) }}
 ---
 apiVersion: v1
 kind: Namespace

@@ -1,8 +1,9 @@
-stServiceCount: 5
-mtServiceCount: 2
-tenantCount: 10
 outputName: httpbin.org
 ingressClass: kong
+count:
+  tenants: 10
+  mtServices: 2
+  stServices: 5
 trafficTest:
   enabled: false
   replicas: 1

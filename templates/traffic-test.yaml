@@ -45,11 +45,11 @@ spec:
           command: ["/scripts/traffic-script.sh"]
           env:
             - name: TENANT_COUNT
-              value: "{{ .Values.tenantCount }}"
+              value: "{{ .Values.count.tenants }}"
             - name: ST_SERVICE_COUNT
-              value: "{{ .Values.stServiceCount }}"
+              value: "{{ .Values.count.stServices }}"
             - name: MT_SERVICE_COUNT
-              value: "{{ .Values.mtServiceCount }}"
+              value: "{{ .Values.count.mtServices }}"
             - name: PROXY_HOST
               value: "{{ .Values.ingressClass }}-kong-proxy.{{ .Values.ingressClass }}"
           volumeMounts:

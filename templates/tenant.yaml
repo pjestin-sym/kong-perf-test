@@ -1,9 +1,9 @@
-{{- $stServiceCount := (int .Values.stServiceCount) }}
-{{- $mtServiceCount := (int .Values.mtServiceCount) }}
+{{- $stServiceCount := (int .Values.count.stServices) }}
+{{- $mtServiceCount := (int .Values.count.mtServices) }}
 {{- $outputName := .Values.outputName }}
 {{- $ingressClass := .Values.ingressClass }}
 
-{{- range $tenantIndex := until (int .Values.tenantCount) }}
+{{- range $tenantIndex := until (int .Values.count.tenants) }}
 ---
 apiVersion: v1
 kind: Namespace
